@@ -1,0 +1,48 @@
+# powershell parameters for task schedule
+# Path : C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+# Arguments : -windowstyle hidden -ExecutionPolicy Unrestricted -File script_download_mosaic.ps1
+# Work path : C:\Program Files (x86)\WinSCP
+
+try
+{
+    # Load WinSCP .NET assembly
+    [Reflection.Assembly]::LoadFrom("WinSCPnet.dll") | Out-Null
+ 
+    # Setup session options
+    $sessionOptions = New-Object WinSCP.SessionOptions
+    $sessionOptions.Protocol = [WinSCP.Protocol]::ftp
+    $sessionOptions.HostName = "ftp.xxx.fr"
+    $sessionOptions.UserName = "xxx"
+    $sessionOptions.Password = "xxx"
+
+    $session = New-Object WinSCP.Session
+
+    try
+    {
+        # Connect
+        $session.Open($sessionOptions)
+ 
+        $localPath = "C:\Users\utilisateur\Documents\Processing\mosaic1024\data\"
+        $remotePath = "/www/concours-photo/plante/output/"
+
+        # Gel list of files in the directory
+        $files = $session.ListDirectory($remotePath)
+
+		# Synchronize files to local directory, collect results
+        $synchronizationResult = $session.SynchronizeDirectories(
+            [WinSCP.SynchronizationMode]::Local, $localPath, $remotePath, $False)
+
+    }
+    finally
+    {
+        # Disconnect, clean up
+        $session.Dispose()
+    }
+ 
+    exit 0
+}
+catch [Exception]
+{
+    Write-Host $_.Exception.Message
+    exit 1
+}
